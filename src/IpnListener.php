@@ -1,6 +1,6 @@
 <?php
 
-namespace wadeshuler\paypalipn;
+namespace suchal\paypalipn;
 
 use Exception;
 
@@ -10,12 +10,13 @@ use Exception;
  *  A class to listen for and handle Instant Payment Notifications (IPN) from
  *  the PayPal server.
  *
- *  Forked from the great Quixotix PayPal IPN script. This fork plans to
+ *  Forked from the great wasuchadeshuler PayPal IPN script. This fork plans to
  *  fix the current issues with the original repo, as well as update the code
  *  for use according to PayPal's documentation, and today's standards.
  *
  *  @package    PHP-PayPal-IPN
- *  @link       https://github.com/WadeShuler/PHP-PayPal-IPN
+ *  @link       https://github.com/suchal/php-paypal-ipn
+ *  @forked     https://github.com/WadeShuler/PHP-PayPal-IPN
  *  @forked     https://github.com/Quixotix/PHP-PayPal-IPN
  *  @author     Wade Shuler
  *  @copyright  Copyright (c) 2015, Wade Shuler
@@ -66,7 +67,7 @@ class IpnListener
 
     private $_errors = array();
     private $post_data;
-    private $rawPostData;				// raw data from php://input
+    private $rawPostData;                // raw data from php://input
     private $post_uri = '';
     private $response_status = '';
     private $response = '';
@@ -88,7 +89,7 @@ class IpnListener
      */
     protected function curlPost($encoded_data)
     {
-        $uri = 'https://'.$this->getPaypalHost().'/cgi-bin/webscr';
+        $uri = 'https://' . $this->getPaypalHost() . '/cgi-bin/webscr';
         $this->post_uri = $uri;
 
         $ch = curl_init();
@@ -134,9 +135,9 @@ class IpnListener
     protected function fsockPost($encoded_data)
     {
 
-        $uri = 'ssl://'.$this->getPaypalHost();
+        $uri = 'ssl://' . $this->getPaypalHost();
         $port = '443';
-        $this->post_uri = $uri.'/cgi-bin/webscr';
+        $this->post_uri = $uri . '/cgi-bin/webscr';
 
         $fp = fsockopen($uri, $port, $errno, $errstr, $this->timeout);
 
@@ -146,14 +147,14 @@ class IpnListener
         }
 
         $header = "POST /cgi-bin/webscr HTTP/1.1\r\n";
-        $header .= "Host: ".$this->getPaypalHost()."\r\n";
+        $header .= "Host: " . $this->getPaypalHost() . "\r\n";
         $header .= "Content-Type: application/x-www-form-urlencoded\r\n";
-        $header .= "Content-Length: ".strlen($encoded_data)."\r\n";
+        $header .= "Content-Length: " . strlen($encoded_data) . "\r\n";
         $header .= "Connection: Close\r\n\r\n";
 
-        fputs($fp, $header.$encoded_data."\r\n\r\n");
+        fputs($fp, $header . $encoded_data . "\r\n\r\n");
 
-        while(!feof($fp)) {
+        while (!feof($fp)) {
             if (empty($this->response)) {
                 // extract HTTP status from first line
                 $this->response .= $status = fgets($fp, 1024);
@@ -247,8 +248,10 @@ class IpnListener
         $r = '';
 
         // date and POST url
-        for ($i=0; $i<80; $i++) { $r .= '-'; }
-        $r .= "\n[".date('m/d/Y g:i A').'] - '.$this->getPostUri();
+        for ($i = 0; $i < 80; $i++) {
+            $r .= '-';
+        }
+        $r .= "\n[" . date('m/d/Y g:i A') . '] - ' . $this->getPostUri();
         if ($this->use_curl) {
             $r .= " (curl)\n";
         } else {
@@ -256,15 +259,19 @@ class IpnListener
         }
 
         // HTTP Response
-        for ($i=0; $i<80; $i++) { $r .= '-'; }
+        for ($i = 0; $i < 80; $i++) {
+            $r .= '-';
+        }
         $r .= "\n{$this->getResponse()}\n";
 
         // POST vars
-        for ($i=0; $i<80; $i++) { $r .= '-'; }
+        for ($i = 0; $i < 80; $i++) {
+            $r .= '-';
+        }
         $r .= "\n";
 
         foreach ($this->post_data as $key => $value) {
-            $r .= str_pad($key, 25)."$value\n";
+            $r .= str_pad($key, 25) . "$value\n";
         }
         $r .= "\n\n";
 
@@ -283,11 +290,10 @@ class IpnListener
      *
      *  @return boolean
      */
-    public function processIpn($post_data=null)
+    public function processIpn($post_data = null)
     {
-        try
-        {
-            $this->requirePostMethod();		// processIpn() should check itself if data is POST
+        try {
+            $this->requirePostMethod();        // processIpn() should check itself if data is POST
 
             // Read POST data
             // reading posted data directly from $_POST causes serialization
@@ -297,14 +303,14 @@ class IpnListener
             } else {
                 $raw_post_data = $post_data;
             }
-            $this->rawPostData = $raw_post_data;							// set raw post data for Class use
+            $this->rawPostData = $raw_post_data;                            // set raw post data for Class use
 
             // if post_data is php input stream, make it an array.
-            if ( ! is_array($raw_post_data) ) {
+            if (!is_array($raw_post_data)) {
                 $raw_post_array = explode('&', $raw_post_data);
-                $this->post_data = $raw_post_array;								// use post array because it's same as $_POST
+                $this->post_data = $raw_post_array;                                // use post array because it's same as $_POST
             } else {
-                $this->post_data = $raw_post_data;								// use post array because it's same as $_POST
+                $this->post_data = $raw_post_data;                                // use post array because it's same as $_POST
             }
 
             $myPost = array();
@@ -342,9 +348,9 @@ class IpnListener
             // Split response headers and payload, a better way for strcmp
             $tokens = explode("\r\n\r\n", trim($res));
             $res = trim(end($tokens));
-            if (strcmp ($res, "VERIFIED") == 0) {
+            if (strcmp($res, "VERIFIED") == 0) {
                 return true;
-            } else if (strcmp ($res, "INVALID") == 0) {
+            } else if (strcmp($res, "INVALID") == 0) {
                 return false;
             } else {
                 throw new Exception("Unexpected response from PayPal.");
@@ -370,5 +376,4 @@ class IpnListener
             throw new Exception("Invalid HTTP request method.");
         }
     }
-
 }
